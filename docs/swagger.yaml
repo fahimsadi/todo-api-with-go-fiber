@@ -1,0 +1,138 @@
+definitions:
+  routes.Todo:
+    properties:
+      id:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /todos:
+    get:
+      description: Retrieve a list of all TODO items
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/routes.Todo'
+            type: array
+      summary: Get all TODOs
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      description: Create a new TODO item with a title and set status to pending
+      parameters:
+      - description: Todo object
+        in: body
+        name: todo
+        required: true
+        schema:
+          $ref: '#/definitions/routes.Todo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/routes.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      tags:
+      - todos
+  /todos/{id}:
+    delete:
+      description: Delete a specific TODO item by its ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a TODO by ID
+      tags:
+      - todos
+    get:
+      description: Retrieve a specific TODO item by its ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a TODO by ID
+      tags:
+      - todos
+    put:
+      consumes:
+      - application/json
+      description: Update the title and status of a TODO item by its ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Todo object
+        in: body
+        name: todo
+        required: true
+        schema:
+          $ref: '#/definitions/routes.Todo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a TODO by ID
+      tags:
+      - todos
+swagger: "2.0"
