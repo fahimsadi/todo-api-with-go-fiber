@@ -2,10 +2,10 @@ definitions:
   routes.Todo:
     properties:
       id:
-        type: integer
-      status:
         type: string
-      title:
+      status:
+        type: boolean
+      task:
         type: string
     type: object
 info:
@@ -24,31 +24,6 @@ paths:
               $ref: '#/definitions/routes.Todo'
             type: array
       summary: Get all TODOs
-      tags:
-      - todos
-    post:
-      consumes:
-      - application/json
-      description: Create a new TODO item with a title and set status to pending
-      parameters:
-      - description: Todo object
-        in: body
-        name: todo
-        required: true
-        schema:
-          $ref: '#/definitions/routes.Todo'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/routes.Todo'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
       tags:
       - todos
   /todos/{id}:

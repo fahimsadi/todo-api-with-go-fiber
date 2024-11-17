@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"strconv"
+	"todo-app/db"
 )
 
 // ToDoDelete godoc
@@ -14,20 +14,19 @@ import (
 // @Failure 400 {object} map[string]interface{}
 // @Router /todos/{id} [delete]
 func ToDoDelete(app *fiber.App) {
-
 	app.Delete("/todos/:id", func(c *fiber.Ctx) error {
-		id, err := strconv.Atoi(c.Params("id"))
+
+		id := c.Params("id")
+
+		err := db.Delete("todo:" + id)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
-		}
 
-		for i, todo := range todos {
-			if todo.ID == id {
-				todos = append(todos[:i], todos[i+1:]...)
-				return c.SendStatus(fiber.StatusNoContent)
+			if err.Error() == "redis: nil" {
+				return c.Status(404).SendString("Todo not found")
 			}
+			return c.Status(500).SendString("Failed to delete todo")
 		}
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "TODO not found"})
-	})
 
+		return c.SendString("Todo deleted successfully")
+	})
 }

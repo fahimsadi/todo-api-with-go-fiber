@@ -1,8 +1,9 @@
 package routes
 
 import (
+	"encoding/json"
 	"github.com/gofiber/fiber/v2"
-	"strconv"
+	"todo-app/db"
 )
 
 // TodoGetByID
@@ -17,16 +18,24 @@ import (
 // @Router /todos/{id} [get]
 func TodoGetByID(app *fiber.App) {
 	app.Get("/todos/:id", func(c *fiber.Ctx) error {
-		id, err := strconv.Atoi(c.Params("id"))
+
+		id := c.Params("id")
+
+		todoJSON, err := db.Get("todo:" + id)
+
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
+
+			if err.Error() == "redis: nil" {
+				return c.Status(404).SendString("Todo not found")
+			}
+			return c.Status(500).SendString("Failed to fetch todo")
 		}
 
-		for _, todo := range todos {
-			if todo.ID == id {
-				return c.JSON(todo)
-			}
+		var todo Todo
+		if err := json.Unmarshal([]byte(todoJSON), &todo); err != nil {
+			return c.Status(500).SendString("Failed to process todo")
 		}
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "TODO not found"})
+
+		return c.JSON(todo)
 	})
 }

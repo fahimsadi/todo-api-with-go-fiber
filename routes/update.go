@@ -1,8 +1,9 @@
 package routes
 
 import (
+	"encoding/json"
 	"github.com/gofiber/fiber/v2"
-	"strconv"
+	"todo-app/db"
 )
 
 // ToDoUpdate godoc
@@ -18,26 +19,43 @@ import (
 // @Failure 404 {object} map[string]interface{}
 // @Router /todos/{id} [put]
 func ToDoUpdate(app *fiber.App) {
-
 	app.Put("/todos/:id", func(c *fiber.Ctx) error {
-		id, err := strconv.Atoi(c.Params("id"))
+
+		id := c.Params("id")
+
+		todoJSON, err := db.Get("todo:" + id)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid ID"})
+			// Check if the error is because the key doesn't exist
+			if err.Error() == "redis: nil" {
+				return c.Status(404).SendString("Todo not found")
+			}
+			return c.Status(500).SendString("Failed to fetch todo")
+		}
+
+		var existingTodo Todo
+		if err := json.Unmarshal([]byte(todoJSON), &existingTodo); err != nil {
+			return c.Status(500).SendString("Failed to process existing todo")
 		}
 
 		var updatedTodo Todo
 		if err := c.BodyParser(&updatedTodo); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse JSON"})
+			return c.Status(400).SendString("Invalid request body")
 		}
 
-		for i, todo := range todos {
-			if todo.ID == id {
-				todos[i].Title = updatedTodo.Title
-				todos[i].Status = updatedTodo.Status
-				return c.JSON(todos[i])
-			}
+		if updatedTodo.Task != "" {
+			existingTodo.Task = updatedTodo.Task
 		}
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "TODO not found"})
+		existingTodo.Status = updatedTodo.Status // Update status
+
+		updatedTodoJSON, err := json.Marshal(existingTodo)
+		if err != nil {
+			return c.Status(500).SendString("Failed to process updated todo")
+		}
+
+		if err := db.Set("todo:"+id, string(updatedTodoJSON)); err != nil {
+			return c.Status(500).SendString("Failed to save updated todo")
+		}
+
+		return c.JSON(existingTodo)
 	})
-
 }

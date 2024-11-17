@@ -2,21 +2,21 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"os"
+	"todo-app/db"
 	_ "todo-app/docs"
 	"todo-app/routes"
 )
 
 func main() {
+
+	db.Initialize()
+	//defer db.Close()
+
 	app := fiber.New()
+	routes.InitializeRoutes(app)
 
-	routes.SwaggerInit(app)
-	routes.TodoCreate(app)
-	routes.TodoGet(app)
-	routes.TodoGetByID(app)
-	routes.ToDoDelete(app)
-	routes.ToDoUpdate(app)
-
-	err := app.Listen(":3000")
+	err := app.Listen(os.Getenv("APP_PORT"))
 	if err != nil {
 		return
 	}
